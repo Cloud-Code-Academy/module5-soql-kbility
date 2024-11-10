@@ -28,9 +28,14 @@ public with sharing class SOQL {
      * @return List of all leads with Id, LastName, Company, Phone, Email
      * Update the corresponding test class and testGetAllLeads method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Lead> getAllLeads() {
+
+        if(Schema.sObjectType.Lead.isAccessible()){
+            return [SELECT Id, LastName, Company, Phone, Email FROM Lead];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Contact records.');
+        }    
+    }
 
     /**
      * Question 2
@@ -39,9 +44,14 @@ public with sharing class SOQL {
      * @return A list of Contact records.
      * Update the corresponding test class and testGetContactsByFirstName method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Contact> getContactsByFirstName (String firstName) {
+
+        if (Schema.sObjectType.Contact.isAccessible()) {
+            return [SELECT Name, FirstName, LastName FROM Contact WHERE FirstName = :firstName];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Contact records.');
+        }
+    }
 
     /**
      * Question 3
@@ -50,9 +60,18 @@ public with sharing class SOQL {
      * @return A list of Contact Ids.
      * Update the corresponding test class and testGetContactIdsByLastName method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Id> getContactIdsByLastName (List<String> lastNames) {  
+
+        List<Contact> contacts = [SELECT Id FROM Contact WHERE LastName IN :lastNames];
+        
+        List<Id> contactIds = new List<Id>();
+        for (Contact c : contacts) {
+            contactIds.add(c.Id);
+        }
+        
+        return contactIds;
+        
+    }
 
     /**
      * Question 4
@@ -63,9 +82,15 @@ public with sharing class SOQL {
      * @return A list of Opportunities with important opportunities fields
      * Update the corresponding test class and testGetClosedWonOpportunityCountByAccount method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Opportunity> getClosedWonOpportunityByAccountId (Id accountId) {
+
+        if (Schema.sObjectType.Opportunity.isAccessible()) {
+            return [SELECT Name, Amount, StageName, CloseDate,AccountId FROM Opportunity WHERE StageName = 'Closed Won' AND AccountId = :accountId];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Opportunity records.');
+        }
+    
+    }
 
     /**
      * Question 5
@@ -74,9 +99,15 @@ public with sharing class SOQL {
      * @return The Integer count of Account records.
      * Update the corresponding test class and testGetAccountCount method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+     public static Integer getAccountCount () {
+
+        if (Schema.sObjectType.Opportunity.isAccessible()) {
+            return [SELECT count() FROM Account];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Account records.');
+        }
+     }
+    
 
     /**
      * Question 6
