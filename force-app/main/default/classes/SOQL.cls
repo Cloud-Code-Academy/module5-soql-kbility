@@ -101,7 +101,7 @@ public with sharing class SOQL {
      */
      public static Integer getAccountCount () {
 
-        if (Schema.sObjectType.Opportunity.isAccessible()) {
+        if (Schema.sObjectType.Account.isAccessible()) {
             return [SELECT count() FROM Account];
         } else {
             throw new SecurityException('Insufficient permissions to access Account records.');
@@ -116,9 +116,15 @@ public with sharing class SOQL {
      * @return A map of Task Ids to Task records.
      * Update the corresponding test class and testGetTasksDueNextWeek method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static Map<Id,Task> getTasksDueNextWeek() {
+        
+        Map<Id, Task> taskMap = new Map<Id, Task>(
+        [SELECT Id, Subject, Status, Priority FROM Task WHERE ActivityDate <= NEXT_N_DAYS:7 ]
+        );
+  
+        return taskMap;
+    
+    }
 
     /**
      * Question 7
@@ -127,9 +133,15 @@ public with sharing class SOQL {
      * @return A list of Contact records.
      * Update the corresponding test class and testGetContactsByEmailDomain method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Contact> getContactsByEmailDomain () {
+
+        if (Schema.sObjectType.Contact.isAccessible()) {
+            return [SELECT Name, FirstName, LastName, Email FROM Contact WHERE Email LIKE '%example.com'];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Contact records.');
+        }
+    
+    }
 
     /**
      * Question 8
@@ -139,7 +151,13 @@ public with sharing class SOQL {
      * @return A list of Opportunity records.
      */
     public static List<Opportunity> getOpportunitiesByNameKeyword(String keyword) {
-        return null; // Replace null with the variable you used to store the result
+        String likeKeyword = '%' + keyword + '%';
+
+        if (Schema.sObjectType.Opportunity.isAccessible()) {
+            return [SELECT AccountId, Name, CloseDate,StageName FROM Opportunity WHERE Name LIKE :likeKeyword];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Opportunity records.');
+        }
     }
 
     /**
@@ -148,7 +166,12 @@ public with sharing class SOQL {
      * @return A list of Case records.
      */
     public static List<Case> getFilterCaseOrigins() {
-        return null; // Replace null with the variable you used to store the result
+        
+        if (Schema.sObjectType.Case.isAccessible()) {
+            return [SELECT CaseNumber, Origin, Status FROM Case WHERE Origin NOT IN ('Web', 'Email', '')];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Case records.');
+        }
     }
 
     /**
