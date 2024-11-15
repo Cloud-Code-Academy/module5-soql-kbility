@@ -250,7 +250,7 @@ public with sharing class SOQLTest {
         insert new List<Lead>{testLead1, testLead2, testLead3, testLead4};
 
         // Call the method to test
-        List<Lead> leads = null; //Replace null with your method passing 'Web', 'Engineer' 
+        List<Lead> leads = SOQL.getLeadsBySourceOrTitle('Web', 'Engineer'); //Replace null with your method passing 'Web', 'Engineer' 
 
         // Assert that the number of leads returned is correct
         System.assertEquals(3, leads.size(), 'Number of leads returned is incorrect.');
@@ -672,6 +672,7 @@ public with sharing class SOQLTest {
         testProduct.Description='Test Product Entry For Product';
         testProduct.productCode = 'SFDCPanther-123';
         testProduct.isActive = true;
+        testProduct.percentOfOpening__c = 50;
         insert testProduct;
 
         // insert pricebook entry for the product
