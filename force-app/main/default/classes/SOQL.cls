@@ -28,9 +28,14 @@ public with sharing class SOQL {
      * @return List of all leads with Id, LastName, Company, Phone, Email
      * Update the corresponding test class and testGetAllLeads method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Lead> getAllLeads() {
+
+        if(Schema.sObjectType.Lead.isAccessible()){
+            return [SELECT Id, LastName, Company, Phone, Email FROM Lead];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Contact records.');
+        }    
+    }
 
     /**
      * Question 2
@@ -39,9 +44,14 @@ public with sharing class SOQL {
      * @return A list of Contact records.
      * Update the corresponding test class and testGetContactsByFirstName method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Contact> getContactsByFirstName (String firstName) {
+
+        if (Schema.sObjectType.Contact.isAccessible()) {
+            return [SELECT Name, FirstName, LastName FROM Contact WHERE FirstName = :firstName];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Contact records.');
+        }
+    }
 
     /**
      * Question 3
@@ -50,9 +60,18 @@ public with sharing class SOQL {
      * @return A list of Contact Ids.
      * Update the corresponding test class and testGetContactIdsByLastName method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Id> getContactIdsByLastName (List<String> lastNames) {  
+
+        List<Contact> contacts = [SELECT Id FROM Contact WHERE LastName IN :lastNames];
+        
+        List<Id> contactIds = new List<Id>();
+        for (Contact c : contacts) {
+            contactIds.add(c.Id);
+        }
+        
+        return contactIds;
+        
+    }
 
     /**
      * Question 4
@@ -63,9 +82,15 @@ public with sharing class SOQL {
      * @return A list of Opportunities with important opportunities fields
      * Update the corresponding test class and testGetClosedWonOpportunityCountByAccount method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Opportunity> getClosedWonOpportunityByAccountId (Id accountId) {
+
+        if (Schema.sObjectType.Opportunity.isAccessible()) {
+            return [SELECT Name, Amount, StageName, CloseDate,AccountId FROM Opportunity WHERE StageName = 'Closed Won' AND AccountId = :accountId];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Opportunity records.');
+        }
+    
+    }
 
     /**
      * Question 5
@@ -74,9 +99,15 @@ public with sharing class SOQL {
      * @return The Integer count of Account records.
      * Update the corresponding test class and testGetAccountCount method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+     public static Integer getAccountCount () {
+
+        if (Schema.sObjectType.Account.isAccessible()) {
+            return [SELECT count() FROM Account];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Account records.');
+        }
+     }
+    
 
     /**
      * Question 6
@@ -85,9 +116,15 @@ public with sharing class SOQL {
      * @return A map of Task Ids to Task records.
      * Update the corresponding test class and testGetTasksDueNextWeek method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static Map<Id,Task> getTasksDueNextWeek() {
+        
+        Map<Id, Task> taskMap = new Map<Id, Task>(
+        [SELECT Id, Subject, Status, Priority FROM Task WHERE ActivityDate <= NEXT_N_DAYS:7 ]
+        );
+  
+        return taskMap;
+    
+    }
 
     /**
      * Question 7
@@ -96,9 +133,15 @@ public with sharing class SOQL {
      * @return A list of Contact records.
      * Update the corresponding test class and testGetContactsByEmailDomain method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}
+    public static List<Contact> getContactsByEmailDomain () {
+
+        if (Schema.sObjectType.Contact.isAccessible()) {
+            return [SELECT Name, FirstName, LastName, Email FROM Contact WHERE Email LIKE '%example.com'];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Contact records.');
+        }
+    
+    }
 
     /**
      * Question 8
@@ -108,7 +151,13 @@ public with sharing class SOQL {
      * @return A list of Opportunity records.
      */
     public static List<Opportunity> getOpportunitiesByNameKeyword(String keyword) {
-        return null; // Replace null with the variable you used to store the result
+        String likeKeyword = '%' + keyword + '%';
+
+        if (Schema.sObjectType.Opportunity.isAccessible()) {
+            return [SELECT AccountId, Name, CloseDate,StageName FROM Opportunity WHERE Name LIKE :likeKeyword];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Opportunity records.');
+        }
     }
 
     /**
@@ -117,7 +166,12 @@ public with sharing class SOQL {
      * @return A list of Case records.
      */
     public static List<Case> getFilterCaseOrigins() {
-        return null; // Replace null with the variable you used to store the result
+        
+        if (Schema.sObjectType.Case.isAccessible()) {
+            return [SELECT CaseNumber, Origin, Status FROM Case WHERE Origin NOT IN ('Web', 'Email', '')];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Case records.');
+        }
     }
 
     /**
@@ -130,9 +184,16 @@ public with sharing class SOQL {
      * @return A list of Lead records.
      * Update the corresponding test class and testGetLeadsBySourceOrTitle method to cover this method
      */
-    //[public | private ] [static] data_type method_name (input parameters) {
-    //  The body of the method
-    //}    
+    public static List<Lead> getLeadsBySourceOrTitle (String source, String keyword) {
+        String title = '%' + keyword + '%';
+    
+        if (Schema.sObjectType.Lead.isAccessible()) {
+            return [SELECT LastName, LeadSource, Title, Company, Email, Phone FROM Lead WHERE LeadSource = :source OR Title LIKE :title];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Lead records.');
+        }
+    
+    }    
 
     /**
      * Question 11
@@ -143,15 +204,16 @@ public with sharing class SOQL {
      */
     public static List<String> getContactNamesByAccount(Id accountId) {
         // Create a list to hold the Contact LastNames
-
+        List<String> contactLastNamesList = new List<String>();
+        
         // Query the Contacts
+        List<Contact> contactRecords = [SELECT LastName FROM Contact WHERE AccountId = :accountId];
+        
         // Loop through each Contact and add the LastName to the list
-        //for () {
-        //    
-        //}
-
-        // Return the list of Contact LastNames
-        return null; // Replace null with the variable you used to store the result
+        for (Contact contact : contactRecords) {
+            contactLastNamesList.add(contact.LastName);
+        }
+        return contactLastNamesList; 
     }
 
     /**
@@ -163,9 +225,11 @@ public with sharing class SOQL {
      */
     public static Decimal getTotalRevenueByStage(String stage) {
         // Use AggregateQuery to get the total revenue
+       
+        List<AggregateResult> results = [SELECT SUM(Amount) totalRevenue FROM Opportunity WHERE StageName = :stage OR Amount >= 10000];
 
         // Return the total revenue
-        return null; // Replace null with the variable you used to store the result
+        return (Decimal)results[0].get('totalRevenue'); // Replace null with the variable you used to store the result
     }
 
     /**
@@ -174,7 +238,12 @@ public with sharing class SOQL {
      * @return A list of the first 10 Accounts ordered by Name.
      */
     public static List<Account> getFirstTenAccounts() {
-        return null; // Replace null with the variable you used to store the result
+
+        if (Schema.sObjectType.Account.isAccessible()) {
+            return [SELECT Name FROM Account ORDER BY Name ASC LIMIT 10];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Account records.');
+        }
     }
     
     /**
@@ -183,7 +252,12 @@ public with sharing class SOQL {
      * @return A list of Opportunities with an Amount greater than 100,000, ordered by CloseDate, and limited to 5 records.
      */
     public static List<Opportunity> getHighValueOpportunities() {
-        return null; // Replace null with the variable you used to store the result
+
+        if (Schema.sObjectType.Opportunity.isAccessible()) {
+            return [SELECT Name, Amount, CloseDate FROM Opportunity WHERE Amount > 100000 ORDER BY CloseDate ASC LIMIT 5];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Opportunity records.');
+        }
     }
     
     /**
@@ -192,7 +266,11 @@ public with sharing class SOQL {
      * @return A list of Contacts
      */
     public static List<Contact> getBirthdateContacts() {
-        return null; // Replace null with the variable you used to store the result
+        if (Schema.sObjectType.Contact.isAccessible()) {
+            return [SELECT Name, Birthdate FROM Contact ORDER BY Birthdate DESC LIMIT 3];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Contact records.');
+        }
     }
     
     /**
@@ -201,7 +279,11 @@ public with sharing class SOQL {
      * @return A list of Cases
      */
     public static List<Case> getCasesWithStatus() {
-        return null; // Replace null with the variable you used to store the result
+        if (Schema.sObjectType.Case.isAccessible()) {
+            return [SELECT Id, Status, CreatedDate FROM Case WHERE Status != 'Closed' ORDER BY CreatedDate ASC LIMIT 10 OFFSET 5];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Case records.');
+        }
     }
 
     /**
@@ -213,14 +295,17 @@ public with sharing class SOQL {
      */
     public static Set<Id> getCaseIdsByAccount(Id accountId) {
         // Create a set to hold the Case Ids
+        Set<Id> caseIds = new Set<Id>();
 
         // Query the Cases
-        // Loop through each Case and add the Id to the set
-        //for () {
-        //    
-        //}
-
-        return null; // Replace null with the variable you used to store the result
+        if (Schema.sObjectType.Case.isAccessible()) {
+                for (Case myCase : [SELECT Id FROM Case WHERE AccountId = :accountId]) {
+                caseIds.add(myCase.Id);
+            }
+        } else {
+            throw new SecurityException('Insufficient permissions to access Case records.');
+        }
+        return caseIds; // Replace null with the variable you used to store the result
     }
 
     /**
@@ -236,8 +321,15 @@ public with sharing class SOQL {
 
         // Query the Accounts
         // Loop through each Account and add the Id and Name to the map
+        if (Schema.sObjectType.Account.isAccessible()) {
+            for (Account myAccount : [SELECT Id, Name FROM Account WHERE BillingCountry != :country]) {
+                accountIdsToNames.put(myAccount.Id, myAccount.Name);
+            } 
+        } else {
+            throw new SecurityException('Insufficient permissions to access Account records.');
+        }
 
-        return null; // Replace null with the variable you used to store the result
+        return accountIdsToNames; // Replace null with the variable you used to store the result
     }
 
     /**
@@ -248,7 +340,11 @@ public with sharing class SOQL {
      * @return The Account Name of the Contact.
      */
     public static String getAccountNameForContact(String contactId) {
-        return null; // Replace null with the variable you used to store the result
+        if (Schema.sObjectType.Contact.isAccessible()) {
+            return [SELECT Account.Name FROM Contact WHERE Id = :contactId].Account.Name;
+        } else {
+            throw new SecurityException('Insufficient permissions to access Contact records.');
+        }
     }    
 
     /**
@@ -259,7 +355,11 @@ public with sharing class SOQL {
      * @return An Account record with related Opportunities.
      */
     public static Account getAccountAndOpportunitiesFromAccountId(Id accountId) {
-        return null; // Replace null with the variable you used to store the result
+        if (Schema.sObjectType.Account.isAccessible() && Schema.sObjectType.Opportunity.isAccessible()) {
+            return [SELECT Name, (SELECT Id, Name FROM Opportunities) FROM Account WHERE Id = :accountId];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Account records.');
+        }
     }
 
     /**
@@ -271,11 +371,17 @@ public with sharing class SOQL {
      */
     public static List<Contact> getAccountsWithContactsByState(Id accountId) {
         // Query the Account
+        Account myAccount = [SELECT BillingState FROM Account WHERE Id = :accountId];
 
         // Store the Account's BillingState
+        String accountBillingState = myAccount.BillingState;
 
         // Query the Contacts
-        return null; // Replace null with the variable you used to store the result
+        if (Schema.sObjectType.Contact.isAccessible()) {
+            return [SELECT Id, Name FROM Contact WHERE MailingState = :accountBillingState];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Contact records.');
+        }
     }
 
     /**
@@ -288,8 +394,10 @@ public with sharing class SOQL {
      */
     public static List<Account> findAccountsByLeadEmailDomains(Set<Id> leadIds) {
         // Query the Leads
+        List<Lead> leads = [SELECT Email FROM Lead WHERE Id IN :leadIds];
 
         // Create a set of email domains from the Leads
+        Set<String> emailDomains = new Set<String>();
 
         // Loop through each Lead
 
@@ -299,9 +407,17 @@ public with sharing class SOQL {
 
                 // Add the email domain to the set
 
-        
+        for (Lead lead : leads) {
+            String email = lead.Email;
+            if (email != null){
+                String domain = 'www.'+email.split('@').get(1);
+                emailDomains.add(domain);
+            }
+        }
+
         // Query the Accounts
-        return null; // Replace null with the variable you used to store the result
+        // Query the Accounts
+        return [SELECT Id, Name, Website FROM Account WHERE Website IN :emailDomains]; // Replace null with the variable you used to store the result
     }
 
     /**
@@ -315,17 +431,31 @@ public with sharing class SOQL {
     public static void cloneLineItems(Id origOppId, List<Id> cloneOppIds) {
         // Query the original Opportunity Line Items
 
+        List<OpportunityLineItem> origOppLineItems = [SELECT Id, OpportunityId, Quantity, UnitPrice, PriceBookEntryId, Product2Id, ProductCode, Name FROM OpportunityLineItem WHERE OpportunityId = :origOppId];
+
         // Create a list to hold the new line items
+        List<OpportunityLineItem> cloneOppLineItems = new List<OpportunityLineItem>();
 
         // Generate a random number between 1 and 3
+        Integer randomNumber = Integer.valueof((Math.random() * 3));
 
         // Loop through each cloned Opportunity Id
-
             // Loop through each original line item
-
                 // Clone the original line item and add the random number to the quantity
-
+        
+        for (Id cloneOppId : cloneOppIds) {
+            for (OpportunityLineItem oli : origOppLineItems) {
+                OpportunityLineItem newOli = oli.clone(false, false, false, false);
+                newOli.OpportunityId = cloneOppId;
+                newOli.Quantity = oli.Quantity + randomNumber;
+                //newOli.percentOfOpening__c = oli.percentOfOpening__c; 
+                cloneOppLineItems.add(newOli);
+            }
+        }
         // Insert the new line items
+        if(!cloneOppLineItems.isEmpty()) {
+            insert cloneOppLineItems;
+        }
     }
     
     /**
@@ -334,8 +464,12 @@ public with sharing class SOQL {
      * Example: getOpportunityDetailsForClosedWon()
      * @return A list of filtered Opportunity
      */
-    public static List<Opportunity> getOpportunityDetailsForClosedWon() {        
-        return null; // Replace null with the variable you used to store the result
+    public static List<Opportunity> getOpportunityDetailsForClosedWon() {      
+        if (Schema.sObjectType.Opportunity.isAccessible()) {
+            return [SELECT Name, Account.Name, Owner.Name FROM Opportunity WHERE StageName = 'Closed Won'];
+        } else {
+            throw new SecurityException('Insufficient permissions to access Opportunity records.');
+        }
     }
 
     /**
@@ -345,17 +479,48 @@ public with sharing class SOQL {
      */
     public static void setPrimaryContact() {
         //Use the getOpportunityDetailsForClosedWon() method to get the Opportunities
+        List<Opportunity> opportunities = getOpportunityDetailsForClosedWon();
+
+        // Create a map to hold the Account Ids to the Primary Contact Ids
+        Map<Id, Id> accountToContactMap = new Map<Id, Id>();
 
         // Create a set of Account Ids from the Opportunities
+        Set<Id> accountIds = new Set<Id>();
+        for (Opportunity o : opportunities) {
+            accountIds.add(o.Account.Id);
+        }
 
         // Query the Contacts
+        List<Contact> contacts = [SELECT Id, AccountId FROM Contact WHERE AccountId IN :accountIds ORDER BY FirstName DESC];
 
         // Loop through each Contact and add the Account Id and Contact to the map
-        
+        for (Contact c : contacts) {
+            accountToContactMap.put(c.AccountId, c.Id);
+        }
+
         // Loop through each Opportunity
 
+        // Loop through each Contact and add the Account Id and Contact to the map
+        for(Contact c : contacts) {
+            accountToContactMap.put(c.AccountId, c.Id);
+
+            // Loop through each Opportunity
+            for (Opportunity o : opportunities) {
                 // Update the Opportunity primary contact from accountToContactMap
 
+                if (accountToContactMap.containsKey(o.AccountId)){
+                    o.Primary_Contact__c = accountToContactMap.get(o.AccountId);
+                }
+                
+            }
+        
+
+        }
+           
         // Update the Opportunities
+
+        if(!opportunities.isEmpty()) {
+            update opportunities;
+        }
     }
 }
