@@ -485,27 +485,38 @@ public with sharing class SOQL {
         Map<Id, Id> accountToContactMap = new Map<Id, Id>();
 
         // Create a set of Account Ids from the Opportunities
-        //Set<Id> accountIds = new Set<Id>();
+        Set<Id> accountIds = new Set<Id>();
+        for (Opportunity o : opportunities) {
+            accountIds.add(o.Account.Id);
+        }
 
         // Query the Contacts
-        List<Contact> contacts = [SELECT Id, AccountId FROM Contact];
+        List<Contact> contacts = [SELECT Id, AccountId FROM Contact WHERE AccountId IN :accountIds ORDER BY FirstName DESC];
+
+        // Loop through each Contact and add the Account Id and Contact to the map
+        for (Contact c : contacts) {
+            accountToContactMap.put(c.AccountId, c.Id);
+        }
+
+        // Loop through each Opportunity
 
         // Loop through each Contact and add the Account Id and Contact to the map
         for(Contact c : contacts) {
             accountToContactMap.put(c.AccountId, c.Id);
 
-        }
-
-        for (Opportunity o : opportunities) {
-            o.Primary_Contact__c = accountToContactMap.get(o.Account.Id);
-        }
-
-        // Loop through each Contact and add the Account Id and Contact to the map
-        
-        // Loop through each Opportunity
-
+            // Loop through each Opportunity
+            for (Opportunity o : opportunities) {
                 // Update the Opportunity primary contact from accountToContactMap
 
+                if (accountToContactMap.containsKey(o.AccountId)){
+                    o.Primary_Contact__c = accountToContactMap.get(o.AccountId);
+                }
+                
+            }
+        
+
+        }
+           
         // Update the Opportunities
 
         if(!opportunities.isEmpty()) {
